@@ -1,17 +1,7 @@
 import express from "express";
-import fs from "node:fs/promises";
+import { loadStudents, saveStudents } from "../data/students.js";
 
 const router = express.Router();
-
-async function loadStudents() {
-  const data = await fs.readFile("./data/students.json", "utf8");
-  return JSON.parse(data);
-}
-
-async function saveStudents(students) {
-  const json = JSON.stringify(students, null, 2);
-  await fs.writeFile("./data/students.json", json);
-}
 
 router.get("/", async (request, response) => {
   const students = await loadStudents();
