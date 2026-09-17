@@ -66,6 +66,50 @@ app.delete("/students/:id", async (request, response) => {
   response.send();
 });
 
+let teachers = [
+  { id: 1, name: "Mette Nielsen", subject: "Webudvikling" },
+  { id: 2, name: "Jonas Berg", subject: "Design" }
+];
+
+app.get("/teachers", (request, response) => {
+  response.json(teachers);
+});
+
+app.get("/teachers/:id", (request, response) => {
+  const teacher = teachers.find((teacher) => teacher.id === Number(request.params.id));
+
+  response.json(teacher);
+});
+
+app.post("/teachers", (request, response) => {
+  const newTeacher = {
+    id: Date.now(),
+    name: request.body.name,
+    subject: request.body.subject
+  };
+
+  teachers.push(newTeacher);
+
+  response.json(newTeacher);
+});
+
+app.put("/teachers/:id", (request, response) => {
+  const teacher = teachers.find((teacher) => teacher.id === Number(request.params.id));
+
+  teacher.name = request.body.name;
+  teacher.subject = request.body.subject;
+
+  response.json(teacher);
+});
+
+app.delete("/teachers/:id", (request, response) => {
+  const index = teachers.findIndex((teacher) => teacher.id === Number(request.params.id));
+
+  teachers.splice(index, 1);
+
+  response.send();
+});
+
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
