@@ -4,7 +4,23 @@ import { loadStudents, saveStudents } from "../data/students.js";
 const router = express.Router();
 
 router.get("/", async (request, response) => {
-  const students = await loadStudents();
+  let students = await loadStudents();
+
+  if (request.query.education) {
+    students = students.filter((student) => student.education === request.query.education);
+  }
+
+  if (request.query.sort) {
+    const key = request.query.sort;
+    students = students.sort((a, b) => (a[key] > b[key] ? 1 : -1));
+  }
+
+  if (request.query.page && request.query.limit) {
+    const page = Number(request.query.page);
+    const limit = Number(request.query.limit);
+    const start = (page - 1) * limit;
+    students = students.slice(start, start + limit);
+  }
 
   response.json(students);
 });
