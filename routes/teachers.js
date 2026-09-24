@@ -14,7 +14,7 @@ router.get("/:id", async (request, response) => {
   const teacher = teachers.find((teacher) => teacher.id === Number(request.params.id));
 
   if (!teacher) {
-    response.status(404).json({ error: "Ingen lærer med det id findes." });
+    response.status(404).json({ error: "Ingen undervisere med det id findes." });
     return;
   }
 
@@ -46,7 +46,7 @@ router.put("/:id", async (request, response) => {
   const teacher = teachers.find((teacher) => teacher.id === Number(request.params.id));
 
   if (!teacher) {
-    response.status(404).json({ error: "Ingen lærer med det id findes." });
+    response.status(404).json({ error: "Ingen undervisere med det id findes." });
     return;
   }
 
@@ -68,7 +68,7 @@ router.delete("/:id", async (request, response) => {
   const teacher = teachers.find((teacher) => teacher.id === Number(request.params.id));
 
   if (!teacher) {
-    response.status(404).json({ error: "Ingen lærer med det id findes." });
+    response.status(404).json({ error: "Ingen undervisere med det id findes." });
     return;
   }
 
