@@ -29,11 +29,21 @@ router.get("/:id", async (request, response) => {
   const students = await loadStudents();
   const student = students.find((student) => student.id === Number(request.params.id));
 
+  if (!student) {
+    response.status(404).json({ error: "Ingen studerende med det id findes." });
+    return;
+  }
+
   response.json(student);
 });
 
 router.post("/", async (request, response) => {
   const students = await loadStudents();
+
+  if (!request.body.name || !request.body.education) {
+    response.status(400).json({ error: "name og education skal begge udfyldes." });
+    return;
+  }
 
   const newStudent = {
     id: Date.now(),
@@ -44,12 +54,22 @@ router.post("/", async (request, response) => {
   students.push(newStudent);
   await saveStudents(students);
 
-  response.json(newStudent);
+  response.status(201).json(newStudent);
 });
 
 router.put("/:id", async (request, response) => {
   const students = await loadStudents();
   const student = students.find((student) => student.id === Number(request.params.id));
+
+  if (!student) {
+    response.status(404).json({ error: "Ingen studerende med det id findes." });
+    return;
+  }
+
+  if (!request.body.name || !request.body.education) {
+    response.status(400).json({ error: "name og education skal begge udfyldes." });
+    return;
+  }
 
   student.name = request.body.name;
   student.education = request.body.education;
@@ -61,12 +81,18 @@ router.put("/:id", async (request, response) => {
 
 router.delete("/:id", async (request, response) => {
   const students = await loadStudents();
-  const index = students.findIndex((student) => student.id === Number(request.params.id));
+  const student = students.find((student) => student.id === Number(request.params.id));
 
+  if (!student) {
+    response.status(404).json({ error: "Ingen studerende med det id findes." });
+    return;
+  }
+
+  const index = students.findIndex((student) => student.id === Number(request.params.id));
   students.splice(index, 1);
   await saveStudents(students);
 
-  response.send();
+  response.status(204).send();
 });
 
 export default router;

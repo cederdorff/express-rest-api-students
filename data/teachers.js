@@ -1,8 +1,12 @@
 import fs from "node:fs/promises";
 
 export async function loadTeachers() {
-  const data = await fs.readFile("./data/teachers.json", "utf8");
-  return JSON.parse(data);
+  try {
+    const data = await fs.readFile("./data/teachers.json", "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    throw new Error("Kunne ikke hente lærere. data/teachers.json mangler eller er ugyldig.");
+  }
 }
 
 export async function saveTeachers(teachers) {
