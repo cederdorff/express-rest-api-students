@@ -1,4 +1,7 @@
 [
   { "id": 1, "name": "Aisha", "education": "Multimediedesign" },
-  { "id": 2, "name": "Noah", "education": "Datamatiker" }
+  { "id": 2, "name": "Noah", "education": "Datamatiker" },
+  { "id": 3, "name": "Emma", "education": "Webudvikler" },
+  { "id": 4, "name": "Liam", "education": "Datamatiker" },
+  { "id": 5, "name": "Olivia", "education": "Multimediedesign" }
 ]
