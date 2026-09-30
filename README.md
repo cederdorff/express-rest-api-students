@@ -38,6 +38,115 @@ flowchart TD
     E --> G["Opgave 4<br/>error-handling"]
 ```
 
+## Hvad løsningen gør
+
+Her ser du den færdige løsning fra opgave 4 ([`error-handling`](https://github.com/cederdorff/express-rest-api-students/tree/error-handling)). De tidligere løsninger har det samme API, men med færre lag. I `main` ligger alt i `server.js`, og der er kun `/students`.
+
+### Lagene i API'et
+
+En request går gennem lagene fra venstre mod højre. Kun data-modulet ved, at data ligger i JSON-filer.
+
+```mermaid
+flowchart LR
+    Client["Klient<br/>Thunder Client / fetch()"]
+
+    subgraph Server["server.js"]
+        Parse["express.json()<br/>læser request.body"]
+        NotFound["404-catch-all<br/>Ukendt sti"]
+        ErrorMW["Fejl-middleware<br/>500 + error.message"]
+    end
+
+    subgraph Routes["routes/"]
+        SR["students.js<br/>/students"]
+        TR["teachers.js<br/>/teachers"]
+    end
+
+    subgraph Data["data/ — data-modul"]
+        SData["students.js<br/>loadStudents()<br/>saveStudents()"]
+        TData["teachers.js<br/>loadTeachers()<br/>saveTeachers()"]
+    end
+
+    subgraph Files["data/ — JSON-filer"]
+        SF[("students.json")]
+        TF[("teachers.json")]
+    end
+
+    Client -->|HTTP request| Parse
+    Parse -->|"app.use('/students')"| SR
+    Parse -->|"app.use('/teachers')"| TR
+    Parse -.->|ingen route matcher| NotFound
+    SR --> SData
+    TR --> TData
+    SData <-->|"fs.readFile()<br/>fs.writeFile()"| SF
+    TData <-->|"fs.readFile()<br/>fs.writeFile()"| TF
+    SData -.->|throw| ErrorMW
+    TData -.->|throw| ErrorMW
+```
+
+### Routes
+
+`/students` og `/teachers` har de samme fem routes. En studerende har `name` og `education`, og en underviser har `name` og `subject`. `id` laver serveren selv med `Date.now()`.
+
+| Metode | Sti | Body | Svar ved succes | Fejl |
+| --- | --- | --- | --- | --- |
+| `GET` | `/students` | – | `200` + liste | – |
+| `GET` | `/students/:id` | – | `200` + én studerende | `404` |
+| `POST` | `/students` | `{ "name", "education" }` | `201` + den nye studerende | `400` |
+| `PUT` | `/students/:id` | `{ "name", "education" }` | `200` + den opdaterede studerende | `404`, `400` |
+| `DELETE` | `/students/:id` | – | `204`, intet indhold | `404` |
+| `GET` | `/teachers` | – | `200` + liste | – |
+| `GET` | `/teachers/:id` | – | `200` + én underviser | `404` |
+| `POST` | `/teachers` | `{ "name", "subject" }` | `201` + den nye underviser | `400` |
+| `PUT` | `/teachers/:id` | `{ "name", "subject" }` | `200` + den opdaterede underviser | `404`, `400` |
+| `DELETE` | `/teachers/:id` | – | `204`, intet indhold | `404` |
+| alle | ukendt sti | – | – | `404` |
+
+Kan en JSON-fil ikke læses, sender fejl-middlewaren `500`. Statuskoderne `201`, `204`, `400` og `404` kommer først med i opgave 4. Før da svarer alle routes med `200`.
+
+`GET /students` kan også filtrere, sortere og paginere med query-parametre (fra opgave 3, del 4). Du kan kombinere dem:
+
+| Query | Eksempel | Gør |
+| --- | --- | --- |
+| `education` | `/students?education=Datamatiker` | viser kun studerende på den uddannelse |
+| `sort` | `/students?sort=name` | sorterer efter et felt, fx `name` eller `id` |
+| `page` + `limit` | `/students?page=2&limit=2` | viser side 2 med 2 studerende pr. side |
+
+### Sådan gemmes data
+
+Data ligger som et array af objekter i en JSON-fil. `data/students.json` ser sådan ud:
+
+```json
+[
+  { "id": 1, "name": "Aisha", "education": "Multimediedesign" },
+  { "id": 2, "name": "Noah", "education": "Datamatiker" }
+]
+```
+
+`data/teachers.json` er bygget på samme måde, bare med `subject` i stedet for `education`.
+
+Alle routes, der ændrer data, følger samme mønster: **read → modify → write**. De læser hele filen, ændrer arrayet i memory og skriver hele arrayet tilbage. Her er `POST /students` som eksempel:
+
+```mermaid
+sequenceDiagram
+    participant C as Klient
+    participant R as routes/students.js
+    participant D as data/students.js
+    participant F as students.json
+
+    C->>R: POST /students<br/>{ "name": "Ida", "education": "Datamatiker" }
+    R->>D: loadStudents()
+    D->>F: fs.readFile()
+    F-->>D: tekst
+    D-->>R: array (JSON.parse)
+    Note over R: tjek name og education<br/>mangler de → 400
+    Note over R: lav newStudent med id: Date.now()<br/>students.push(newStudent)
+    R->>D: saveStudents(students)
+    D->>F: fs.writeFile(JSON.stringify(...))
+    R-->>C: 201 + den nye studerende
+```
+
+`PUT` og `DELETE` gør det samme. De finder den rigtige studerende med `find()`, ændrer eller fjerner den og gemmer hele arrayet igen. Fordi data ligger i en fil, overlever de en genstart af serveren.
+
 ## Opgaver og løsninger
 
 ### Opgave 1: JSON-øvelse — Studerende i en JSON-fil
